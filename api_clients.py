@@ -39,6 +39,14 @@ WAVESPEED_BASE_ENDPOINT = "https://api.wavespeed.ai/api/v3/{}"
 VEO_MODEL_ID = "veo-3.0-generate-preview" # For Vertex AI Video
 NANO_BANANA_IMAGE_MODEL = "gemini-2.5-flash-image-preview" # For Vertex AI Image
 
+def _language_instruction(language: str, subject: str) -> str:
+    if language and language.strip().lower() in ("urdu", "roman urdu"):
+        return (
+            f"{subject} must be in Roman Urdu using the Latin alphabet only. "
+            "Do not use Devanagari, Urdu, or Arabic script."
+        )
+    return f"{subject} must be written in {language}." if language else ""
+
 # --- Style Profiles: Single source of truth for all content styles ---
 STYLE_PROFILES = {
     "Podcast": {
@@ -247,11 +255,7 @@ class GoogleClient:
         logging.info(f"Conducting advanced deep research for '{topic}'...")
         external_data = news_client.get_news(topic)
         
-        language_instruction = ""
-        if language and language.lower() == 'urdu':
-            language_instruction = "All output text must be written in Roman Urdu."
-        elif language:
-            language_instruction = f"All output text must be written in {language}."
+        language_instruction = _language_instruction(language, "All output text")
 
         engine = self.config.get("TEXT_ENGINE", "Gemini API")
         
@@ -347,11 +351,10 @@ class GoogleClient:
             sub_instruction = podcast_sub_style_map.get(podcast_sub_style, script_instruction)
             script_instruction = f"{script_instruction} Sub-style: {sub_instruction}"
 
-        language_instruction = "The entire script must be in English."
+        language = "English"
         if config.get("LANGUAGE_ENABLED", False):
             language = config.get("PODCAST_LANGUAGE", "English")
-            if language.lower() == 'urdu': language_instruction = "The entire script must be in Roman Urdu."
-            else: language_instruction = f"The entire script must be in {language}."
+        language_instruction = _language_instruction(language, "The entire script")
 
         word_limits = {
             "Micro (< 1 minute)": "STRICTLY under 130 words in total (around 45 seconds of speech)",
@@ -557,16 +560,15 @@ Generate the complete script now, ensuring all vocal directions match the '{cont
     @handle_api_errors
     def fact_check_script(self, script: str, language: str) -> str:
         logging.info("Fact-checking script...")
-        language_instruction = "Your entire response must be in English."
-        if language and language.lower() == 'urdu': language_instruction = "Your entire response must be in Roman Urdu."
-        elif language: language_instruction = f"Your entire response must be in {language}."
+        language_instruction = _language_instruction(language or "English", "Your entire response")
         prompt = f"Review the script for factual accuracy. List issues and suggest corrections.\n{language_instruction}\n\nScript:\n{script}"
         return self._generate_text(prompt)
 
     @handle_api_errors
-    def revise_script(self, script: str, fact_check_results: str) -> str:
+    def revise_script(self, script: str, fact_check_results: str, language: str = "English") -> str:
         logging.info("Revising script based on fact-check...")
-        prompt = f"Revise the script based on the fact-check. Output only the revised script.\n\nFact-Check:\n{fact_check_results}\n\nOriginal Script:\n{script}"
+        language_instruction = _language_instruction(language, "The revised script")
+        prompt = f"Revise the script based on the fact-check. Output only the revised script. {language_instruction}\n\nFact-Check:\n{fact_check_results}\n\nOriginal Script:\n{script}"
         return self._generate_text(prompt)
 
     @handle_api_errors

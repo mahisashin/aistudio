@@ -169,8 +169,7 @@ export default function ExplainerModePage() {
                     <label className="block text-[10px] font-bold text-zinc-500 mb-1.5 uppercase tracking-wider">Language</label>
                     <select value={language} onChange={e => setLanguage(e.target.value)} disabled={status === "processing"} className="modern-select text-sm py-2">
                       <option value="English" className="bg-black">English</option>
-                      <option value="Hindi" className="bg-black">Hindi</option>
-                      <option value="Urdu" className="bg-black">Urdu</option>
+                      <option value="Roman Urdu" className="bg-black">Roman Urdu</option>
                       <option value="Spanish" className="bg-black">Spanish</option>
                       <option value="French" className="bg-black">French</option>
                     </select>

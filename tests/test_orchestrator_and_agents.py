@@ -81,6 +81,45 @@ def test_urdu_and_roman_urdu_normalization():
     assert "duniya" in clean
     assert "🚀" not in clean
 
+def test_roman_urdu_generation_requires_latin_script():
+    from api_clients import _language_instruction
+    instruction = _language_instruction("Roman Urdu", "The entire script")
+    assert "Latin alphabet only" in instruction
+    assert "Do not use Devanagari, Urdu, or Arabic script" in instruction
+
+@pytest.mark.parametrize(("language", "whisper_language"), [("Hindi", "hi"), ("Urdu", "ur")])
+def test_hindi_and_urdu_captions_request_latin_script(monkeypatch, language, whisper_language):
+    import pipeline
+
+    calls = []
+
+    class FakeWhisperModel:
+        def transcribe(self, audio_file, **kwargs):
+            calls.append(kwargs)
+            return {"language": whisper_language, "segments": []}
+
+    monkeypatch.setattr(pipeline, "get_whisper_model", lambda _: FakeWhisperModel())
+    assert pipeline.generate_captions("audio.mp3", None, language) == []
+    assert calls[0]["language"] == whisper_language
+    assert "Latin alphabet only" in calls[0]["initial_prompt"]
+
+def test_auto_detected_hindi_captions_retry_in_latin_script(monkeypatch):
+    import pipeline
+
+    calls = []
+
+    class FakeWhisperModel:
+        def transcribe(self, audio_file, **kwargs):
+            calls.append(kwargs)
+            language = kwargs.get("language") or "hi"
+            return {"language": language, "segments": []}
+
+    monkeypatch.setattr(pipeline, "get_whisper_model", lambda _: FakeWhisperModel())
+    assert pipeline.generate_captions("audio.mp3", None, None) == []
+    assert len(calls) == 2
+    assert calls[1]["language"] == "hi"
+    assert "Latin alphabet only" in calls[1]["initial_prompt"]
+
 def test_multimodal_boost_calculation():
     from pipeline_shorts import get_multimodal_boost
     audio_energy = [0.1, 0.2, 0.9, 0.95, 0.8]

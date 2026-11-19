@@ -196,7 +196,37 @@ def generate_captions(audio_file, captions_file, language: str, style_opts: dict
     logging.info("Transcribing audio for captions (this may take a moment)...")
     try:
         model = get_whisper_model("base")
-        result = model.transcribe(audio_file, word_timestamps=True, language=language)
+        whisper_language = {"hindi": "hi", "urdu": "ur"}.get(
+            (language or "").strip().lower(), language
+        )
+        romanized_prompt = None
+        if whisper_language in ("hi", "ur"):
+            romanized_prompt = (
+                "Transcribe the spoken words using the Latin alphabet only. "
+                "Do not use Devanagari, Urdu, or Arabic script. Preserve the spoken language; "
+                "do not translate."
+            )
+        result = model.transcribe(
+            audio_file,
+            word_timestamps=True,
+            language=whisper_language,
+            initial_prompt=romanized_prompt,
+        )
+        if (
+            not romanized_prompt
+            and result.get("language") in ("hi", "ur")
+            and whisper_language is None
+        ):
+            result = model.transcribe(
+                audio_file,
+                word_timestamps=True,
+                language=result["language"],
+                initial_prompt=(
+                    "Transcribe the spoken words using the Latin alphabet only. "
+                    "Do not use Devanagari, Urdu, or Arabic script. Preserve the spoken language; "
+                    "do not translate."
+                ),
+            )
         
         all_word_timestamps = []
         for segment in result.get("segments", []):
@@ -401,7 +431,11 @@ class Pipeline:
                     self._check_stop()
                     if "Revise Research" in steps_to_run:
                         self.update_status(2, "⏳", 0.2); logging.info("Revising research based on fact-check...")
-                        research = self.google_client.revise_script(research, fact_check); open(summary_file, "w", encoding="utf-8").write(research); self.update_status(2, "✅", 1.0)
+                        research = self.google_client.revise_script(
+                            research, fact_check, self.config.get("PODCAST_LANGUAGE", "English")
+                        )
+                        open(summary_file, "w", encoding="utf-8").write(research)
+                        self.update_status(2, "✅", 1.0)
                 else:
                     logging.info("Fact-checking is disabled. Skipping."); self.update_status(1, "⏭️", 1.0); self.update_status(2, "⏭️", 1.0)
             self._check_stop()

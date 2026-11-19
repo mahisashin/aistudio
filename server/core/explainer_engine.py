@@ -121,10 +121,16 @@ class ExplainerEngine:
                 
         self.log(f"Generating explainer script in {self.language} using {self.text_engine}...", 0.40)
         
+        language_instruction = (
+            "Write all voiceover text in Roman Urdu using the Latin alphabet only. "
+            "Do not use Devanagari, Urdu, or Arabic script."
+            if self.language.strip().lower() in ("urdu", "roman urdu")
+            else f"Write all voiceover text in {self.language}."
+        )
         prompt = f"""You are an expert movie explainer script writer. Read this movie transcript and write a highly engaging {self.target_duration} explainer script.
 
 CRITICAL REQUIREMENT:
-Your entire output script (all 'text' fields) MUST be written in {self.language}. Do NOT write the voiceover in English unless {self.language} is English.
+{language_instruction}
 
 Return ONLY a valid JSON array of objects. Each object must have:
 - "text": The voiceover text (1-3 sentences)

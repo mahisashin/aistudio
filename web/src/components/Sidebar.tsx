@@ -16,10 +16,7 @@ import {
   Film, 
   MonitorPlay, 
   Clapperboard,
-  Activity,
-  Zap,
-  Coffee,
-  Heart
+  Zap
 } from "lucide-react";
 
 export function Sidebar() {
@@ -124,31 +121,8 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Bottom Actions: Buy Me a Coffee & System Status */}
-      <div className="pt-3 border-t border-white/5 space-y-2.5">
-        {/* Buy Me A Coffee Button */}
-        <a 
-          href="https://buymeacoffee.com/naqash" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="group flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#FFDD00]/15 via-[#FFDD00]/10 to-transparent border border-[#FFDD00]/30 hover:border-[#FFDD00]/60 transition-all duration-300 shadow-[0_0_15px_rgba(255,221,0,0.08)] hover:shadow-[0_0_20px_rgba(255,221,0,0.2)]"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-[#FFDD00] text-black shadow-sm group-hover:rotate-6 transition-transform">
-              <Coffee className="h-4 w-4 stroke-[2.5]" />
-            </div>
-            <div>
-              <span className="text-xs font-black text-white group-hover:text-[#FFDD00] transition-colors block">
-                Buy Me a Coffee
-              </span>
-              <span className="text-[9px] font-semibold text-zinc-400 block">
-                Support Open-Source
-              </span>
-            </div>
-          </div>
-          <Heart className="h-3.5 w-3.5 text-[#FFDD00] fill-[#FFDD00]/30 group-hover:scale-125 transition-transform" />
-        </a>
-
+      {/* System Status */}
+      <div className="pt-3 border-t border-white/5">
         {/* Live System Status Widget */}
         <div className="flex items-center justify-between bg-black/40 p-2.5 rounded-xl border border-white/5 backdrop-blur-md">
           <div className="flex items-center gap-2">
